@@ -1,0 +1,1 @@
+{"$schema":"https://openapi.vercel.sh/vercel.json","functions":{"api/ask-stream.js":{"maxDuration":300},"api/ask.js":{"maxDuration":300}},"rewrites":[{"destination":"/api/:path*","source":"/api/:path*"}]}

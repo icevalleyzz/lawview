@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>로풀 법률 상담</title>
+<style>
+  :root { --bg:#f7f5f0; --card:#fff; --ink:#1f2937; --muted:#6b7280; --accent:#1d4ed8; --accent-soft:#dbeafe; --line:#e5e7eb; --danger:#b91c1c; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif; background:var(--bg); color:var(--ink); line-height:1.6; }
+  header { background:#111827; color:#fff; padding:28px 20px; }
+  header .wrap, main { max-width:860px; margin:0 auto; }
+  header h1 { margin:0 0 6px; font-size:26px; }
+  header p { margin:0; color:#d1d5db; font-size:14px; }
+  main { padding:20px 16px 60px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:16px; }
+  label { font-weight:700; font-size:14px; display:block; margin-bottom:6px; }
+  textarea { width:100%; min-height:140px; resize:vertical; border:1px solid var(--line); border-radius:10px; padding:12px; font:inherit; }
+  textarea:focus, input[type="search"]:focus, select:focus { outline:2px solid var(--accent-soft); border-color:var(--accent); }
+  .row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
+  .chip { border:1px solid var(--line); background:#fff; border-radius:999px; padding:7px 12px; cursor:pointer; font-size:13px; }
+  .chip.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .seg { display:inline-flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  .seg button { border:0; background:#fff; padding:9px 14px; cursor:pointer; font-size:14px; }
+  .seg button.active { background:var(--accent); color:#fff; }
+  select { padding:9px 10px; border:1px solid var(--line); border-radius:10px; font:inherit; background:#fff; }
+  .hint { color:var(--muted); font-size:13px; }
+  .actions { display:flex; gap:10px; align-items:center; margin-top:14px; flex-wrap:wrap; }
+  .btn { border:0; border-radius:10px; padding:12px 20px; font-size:15px; font-weight:700; cursor:pointer; background:var(--accent); color:#fff; }
+  .btn:disabled { opacity:.55; cursor:wait; }
+  .btn.ghost { background:#fff; color:var(--ink); border:1px solid var(--line); font-weight:600; }
+  .btn.danger { background:#fff; color:var(--danger); border:1px solid #fecaca; font-weight:600; padding:8px 12px; font-size:13px; }
+  #status { font-size:14px; color:var(--muted); }
+  #status.error { color:var(--danger); font-weight:600; }
+  #answer { white-space:normal; }
+  #answer h2 { font-size:19px; margin:18px 0 8px; } #answer h3 { font-size:16px; margin:16px 0 6px; }
+  #answer p { margin:8px 0; } #answer ul, #answer ol { margin:8px 0; padding-left:22px; }
+  #answer li { margin:4px 0; }
+  #answer a { color:var(--accent); }
+  #answer blockquote { border-left:3px solid var(--line); margin:10px 0; padding:2px 12px; color:#4b5563; }
+  .sources { margin-top:16px; border-top:1px solid var(--line); padding-top:12px; }
+  .sources a { display:block; margin:6px 0; color:var(--accent); word-break:break-all; font-size:14px; }
+  .usage { margin-top:12px; font-size:13px; color:var(--muted); }
+  .examples button { text-align:left; background:#f9fafb; border:1px solid var(--line); border-radius:10px; padding:10px 12px; cursor:pointer; font-size:14px; width:100%; margin-top:8px; }
+  .history-item { border:1px solid var(--line); border-radius:10px; padding:12px; margin-top:10px; cursor:pointer; }
+  .history-item:hover { border-color:var(--accent); }
+  .history-item .q { font-weight:700; }
+  .history-item .meta { font-size:12px; color:var(--muted); margin-top:4px; }
+  .history-item .tools { margin-top:8px; display:flex; gap:8px; }
+  .history-item .tools button { border:1px solid var(--line); background:#fff; border-radius:8px; padding:5px 10px; cursor:pointer; font-size:12px; }
+  input[type="search"] { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font:inherit; }
+  .disclaimer { background:#fef3c7; border:1px solid #fde68a; border-radius:12px; padding:14px 16px; font-size:14px; }
+  .hidden { display:none; }
+  @media (max-width:600px){ header h1{font-size:22px;} }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>⚖️ 로풀 법률 상담</h1>
+  <p>질문을 보내면 서버가 판례·조문을 직접 확인해 출처와 함께 답변합니다. 별도의 API 키 입력은 필요 없습니다.</p>
+</div></header>
+
+<main>
+  <div class="disclaimer">이 답변은 AI가 판례·법령 코퍼스를 근거로 제공하는 <strong>일반 정보</strong>이며, 변호사의 법률 자문이 아닙니다. 중요한 결정 전에는 반드시 변호사 등 전문가와 상담하세요.</div>
+
+  <section class="card" style="margin-top:16px">
+    <label for="question">상담 질문</label>
+    <textarea id="question" maxlength="45000" placeholder="예) 전세 보증금을 집주인이 안 돌려주는데 어떻게 대응해야 하나요? 사실관계를 구체적으로 적을수록 답변이 정확해집니다."></textarea>
+    <div class="row" style="justify-content:space-between;margin-top:6px">
+      <span class="hint" id="count">0 / 45,000자</span>
+      <span class="hint">평균 답변 시간 30~60초</span>
+    </div>
+
+    <label style="margin-top:16px">분야</label>
+    <div class="chips" id="categories"></div>
+
+    <div class="row" style="margin-top:16px;gap:16px">
+      <div><label>답변 깊이</label>
+        <div class="seg" id="depthSeg">
+          <button type="button" data-depth="quick">빠른 답변</button>
+          <button type="button" data-depth="deep" class="active">심층 분석</button>
+        </div>
+      </div>
+      <div><label for="style">답변 방식</label>
+        <select id="style">
+          <option value="conclusion">결론 먼저</option>
+          <option value="easy">쉬운 말로</option>
+          <option value="procedure">절차 중심</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" id="askBtn">상담하기</button>
+      <button class="btn ghost hidden" id="stopBtn">중단</button>
+      <span id="status" role="status"></span>
+    </div>
+
+    <div class="examples">
+      <label style="margin-top:16px">예시 질문</label>
+      <button type="button" data-q="전세 보증금을 집주인이 안 돌려주는데 어떻게 대응해야 하나요?">전세 보증금을 집주인이 안 돌려주는데 어떻게 대응해야 하나요?</button>
+      <button type="button" data-q="음주운전 초범인데 처벌 수위가 어떻게 되나요?">음주운전 초범인데 처벌 수위가 어떻게 되나요?</button>
+      <button type="button" data-q="회사에서 부당 해고를 당했습니다. 구제 절차를 알려주세요.">회사에서 부당 해고를 당했습니다. 구제 절차를 알려주세요.</button>
+    </div>
+  </section>
+
+  <section class="card hidden" id="resultCard">
+    <h2 style="margin-top:0">답변</h2>
+    <div id="answer"></div>
+    <div class="sources hidden" id="sourcesBox"><strong>출처</strong><div id="sources"></div></div>
+    <div class="usage" id="usage"></div>
+    <div class="actions">
+      <button class="btn ghost" id="copyBtn">답변 복사</button>
+      <button class="btn ghost" id="favBtn">⭐ 즐겨찾기</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="row" style="justify-content:space-between">
+      <h2 style="margin:0;font-size:18px">상담 기록 <span class="hint">(이 브라우저에만 저장)</span></h2>
+      <button class="btn danger" id="clearHistory">전체 삭제</button>
+    </div>
+    <input type="search" id="historySearch" placeholder="기록 검색 — 질문이나 답변 내용으로 검색" style="margin-top:12px">
+    <div id="history"></div>
+  </section>
+</main>
+
+<script>
+const CATEGORIES = ["임대차·전세","노동","형사","민사·손해배상","가족·이혼","상속","계약","교통사고","부동산"];
+const STYLE_INSTRUCTIONS = {
+  conclusion: "결론을 먼저 쓰고, 근거 조문은 뒤에 정리해주세요.",
+  easy: "법률 용어를 최대한 쉬운 말로 풀어서 설명해주세요.",
+  procedure: "지금부터 해야 할 절차를 순서대로 정리해주세요."
+};
+const HISTORY_KEY = "legalConsultHistoryV1";
+const $ = (id) => document.getElementById(id);
+let selectedCategory = "", depth = "deep", aborter = null, currentRecord = null;
+
+const catBox = $("categories");
+CATEGORIES.forEach((c) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "chip"; b.textContent = c;
+  b.onclick = () => {
+    selectedCategory = selectedCategory === c ? "" : c;
+    document.querySelectorAll("#categories .chip").forEach((x) => x.classList.toggle("active", x.textContent === selectedCategory));
+  };
+  catBox.appendChild(b);
+});
+
+$("depthSeg").querySelectorAll("button").forEach((b) => {
+  b.onclick = () => {
+    depth = b.dataset.depth;
+    document.querySelectorAll("#depthSeg button").forEach((x) => x.classList.toggle("active", x === b));
+  };
+});
+document.querySelectorAll(".examples button").forEach((b) => {
+  b.onclick = () => { $("question").value = b.dataset.q; updateCount(); $("question").focus(); };
+});
+$("question").addEventListener("input", updateCount);
+function updateCount(){ $("count").textContent = `${$("question").value.length.toLocaleString("ko-KR")} / 45,000자`; }
+updateCount();
+
+function escapeHtml(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function inlineMd(s){
+  let t = escapeHtml(s);
+  t = t.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  t = t.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+  return t;
+}
+function renderMarkdown(text){
+  const lines = (text || "").split("\n");
+  let html = "", inUl = false, inOl = false;
+  const closeLists = () => { if (inUl){ html += "</ul>"; inUl = false; } if (inOl){ html += "</ol>"; inOl = false; } };
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) { closeLists(); continue; }
+    if (line.startsWith("### ")) { closeLists(); html += `<h3>${inlineMd(line.slice(4))}</h3>`; continue; }
+    if (line.startsWith("## ")) { closeLists(); html += `<h2>${inlineMd(line.slice(3))}</h2>`; continue; }
+    if (line.startsWith("# ")) { closeLists(); html += `<h2>${inlineMd(line.slice(2))}</h2>`; continue; }
+    if (/^[-*]\s+/.test(line)) { if (inOl) closeLists(); if (!inUl){ html += "<ul>"; inUl = true; } html += `<li>${inlineMd(line.replace(/^[-*]\s+/, ""))}</li>`; continue; }
+    if (/^\d+[.)]\s+/.test(line)) { if (inUl) closeLists(); if (!inOl){ html += "<ol>"; inOl = true; } html += `<li>${inlineMd(line.replace(/^\d+[.)]\s+/, ""))}</li>`; continue; }
+    if (line.startsWith("> ")) { closeLists(); html += `<blockquote>${inlineMd(line.slice(2))}</blockquote>`; continue; }
+    closeLists(); html += `<p>${inlineMd(line)}</p>`;
+  }
+  closeLists();
+  return html || "<p>답변을 받는 중입니다…</p>";
+}
+function showSources(sources){
+  const box = $("sourcesBox"), list = $("sources");
+  list.innerHTML = "";
+  if (!sources || !sources.length) { box.classList.add("hidden"); return; }
+  box.classList.remove("hidden");
+  sources.forEach((s, i) => {
+    const url = typeof s === "string" ? s : s.url;
+    if (!url) return;
+    const a = document.createElement("a");
+    a.href = url; a.target = "_blank"; a.rel = "noopener"; a.textContent = `[${i + 1}] ${url}`;
+    list.appendChild(a);
+  });
+}
+function showUsage(usage){
+  $("usage").textContent = usage
+    ? `입력 토큰 ${Number(usage.input_tokens || 0).toLocaleString("ko-KR")} · 출력 토큰 ${Number(usage.output_tokens || 0).toLocaleString("ko-KR")} · 도구 호출 ${usage.tool_calls ?? 0}회`
+    : "";
+}
+function setStatus(msg, isError){ const el = $("status"); el.textContent = msg || ""; el.classList.toggle("error", !!isError); }
+
+function loadHistory(){ try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]"); } catch { return []; } }
+function saveHistory(list){ localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, 100))); }
+function renderHistory(){
+  const q = ($("historySearch").value || "").toLowerCase();
+  const list = loadHistory().filter((r) => !q || (r.question + " " + (r.answer || "")).toLowerCase().includes(q));
+  const box = $("history"); box.innerHTML = "";
+  if (!list.length) { box.innerHTML = '<p class="hint">아직 저장된 상담이 없습니다.</p>'; return; }
+  list.forEach((r) => {
+    const div = document.createElement("div"); div.className = "history-item";
+    div.innerHTML = `<div class="q">${escapeHtml(r.question)}</div><div class="meta">${new Date(r.createdAt).toLocaleString("ko-KR")} · ${escapeHtml(r.category || "분야 미지정")} · ${r.depth === "quick" ? "빠른 답변" : "심층 분석"}${r.favourite ? " · ⭐ 즐겨찾기" : ""}</div><div class="tools"><button type="button" data-act="open">다시 보기</button><button type="button" data-act="fav">${r.favourite ? "즐겨찾기 해제" : "즐겨찾기"}</button><button type="button" data-act="del">삭제</button></div>`;
+    div.querySelector('[data-act="open"]').onclick = (e) => { e.stopPropagation(); openRecord(r); };
+    div.querySelector('[data-act="fav"]').onclick = (e) => { e.stopPropagation(); const all = loadHistory(); const t = all.find((x) => x.id === r.id); if (t) t.favourite = !t.favourite; saveHistory(all); renderHistory(); };
+    div.querySelector('[data-act="del"]').onclick = (e) => { e.stopPropagation(); saveHistory(loadHistory().filter((x) => x.id !== r.id)); renderHistory(); };
+    div.onclick = () => openRecord(r);
+    box.appendChild(div);
+  });
+}
+function openRecord(r){
+  currentRecord = r;
+  $("question").value = r.question; updateCount();
+  $("resultCard").classList.remove("hidden");
+  $("answer").innerHTML = renderMarkdown(r.answer || "");
+  showSources(r.sources); showUsage(r.usage);
+  $("favBtn").textContent = r.favourite ? "⭐ 즐겨찾기 해제" : "⭐ 즐겨찾기";
+  $("resultCard").scrollIntoView({ behavior: "smooth" });
+}
+$("historySearch").addEventListener("input", renderHistory);
+$("clearHistory").onclick = () => { if (confirm("상담 기록을 모두 삭제할까요?")) { saveHistory([]); renderHistory(); } };
+$("copyBtn").onclick = async () => { if (currentRecord?.answer) { await navigator.clipboard.writeText(currentRecord.answer); setStatus("답변을 복사했습니다."); } };
+$("favBtn").onclick = () => {
+  if (!currentRecord) return;
+  const all = loadHistory(); const t = all.find((x) => x.id === currentRecord.id);
+  if (t) { t.favourite = !t.favourite; currentRecord = t; saveHistory(all); renderHistory(); $("favBtn").textContent = t.favourite ? "⭐ 즐겨찾기 해제" : "⭐ 즐겨찾기"; }
+};
+renderHistory();
+
+$("stopBtn").onclick = () => { if (aborter) aborter.abort(); };
+
+$("askBtn").onclick = async () => {
+  const question = $("question").value.trim();
+  if (!question) { setStatus("질문을 입력해 주세요.", true); return; }
+  const askBtn = $("askBtn"), stopBtn = $("stopBtn");
+  askBtn.disabled = true; stopBtn.classList.remove("hidden");
+  setStatus("판례·조문을 확인하고 있습니다… 평균 30~60초 걸립니다.");
+  $("resultCard").classList.remove("hidden");
+  $("answer").innerHTML = "<p>답변을 생성하고 있습니다…</p>";
+  showSources([]); showUsage(null);
+
+  const fullQuestion = selectedCategory ? `[분야: ${selectedCategory}] ${question}` : question;
+  aborter = new AbortController();
+  let answerText = "", sources = [], usage = null, sawStream = false;
+  try {
+    const res = await fetch("/api/ask-stream", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
+      body: JSON.stringify({ question: fullQuestion, depth, instructions: STYLE_INSTRUCTIONS[$("style").value] }),
+      signal: aborter.signal,
+    });
+    const contentType = res.headers.get("content-type") || "";
+    if (!res.ok) {
+      let msg = `요청에 실패했습니다. (HTTP ${res.status})`;
+      try { const j = await res.json(); if (j?.error?.message) msg = j.error.message; } catch {}
+      throw new Error(msg);
+    }
+    if (!contentType.includes("text/event-stream")) {
+      const data = await res.json();
+      answerText = data.answer || ""; sources = data.sources || []; usage = data.usage || null;
+    } else {
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = "";
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const parts = buf.split("\n"); buf = parts.pop();
+        for (const line of parts) {
+          if (!line.startsWith("data:")) continue;
+          const payload = line.slice(5).trim();
+          if (!payload) continue;
+          let ev; try { ev = JSON.parse(payload); } catch { continue; }
+          if (ev.type === "content_block_delta" && ev.delta?.type === "text_delta" && ev.delta.text) {
+            sawStream = true; answerText += ev.delta.text;
+            $("answer").innerHTML = renderMarkdown(answerText);
+          }
+          if (ev.type === "message_delta") {
+            if (ev.sources) sources = ev.sources;
+            if (ev.usage) usage = ev.usage;
+          }
+          if (ev.type === "message_stop") { /* stream finished */ }
+        }
+      }
+      if (!sawStream && !answerText) {
+        // Upstream may have returned a non-streamed body; fall back to sync call.
+        const r2 = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: fullQuestion, depth, instructions: STYLE_INSTRUCTIONS[$("style").value] }) });
+        if (!r2.ok) { let m = `요청에 실패했습니다. (HTTP ${r2.status})`; try { const j = await r2.json(); if (j?.error?.message) m = j.error.message; } catch {} throw new Error(m); }
+        const d2 = await r2.json(); answerText = d2.answer || ""; sources = d2.sources || []; usage = d2.usage || null;
+      }
+    }
+    if (!answerText) throw new Error("답변을 받지 못했습니다. 다시 시도해 주세요.");
+    $("answer").innerHTML = renderMarkdown(answerText);
+    showSources(sources); showUsage(usage);
+    setStatus("답변이 도착했습니다.");
+    currentRecord = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8), question, category: selectedCategory, depth, answer: answerText, sources, usage, createdAt: new Date().toISOString(), favourite: false };
+    const all = loadHistory(); all.unshift(currentRecord); saveHistory(all); renderHistory();
+    $("favBtn").textContent = "⭐ 즐겨찾기";
+  } catch (err) {
+    if (err && err.name === "AbortError") { setStatus("중단했습니다.", true); }
+    else { setStatus(err.message || "오류가 발생했습니다.", true); $("answer").innerHTML = `<p>${escapeHtml(err.message || "오류가 발생했습니다.")}</p>`; }
+  } finally {
+    askBtn.disabled = false; stopBtn.classList.add("hidden"); aborter = null;
+  }
+};
+</script>
+</body>
+</html>
